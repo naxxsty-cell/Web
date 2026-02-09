@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Brechtwahl – Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root{
+      --bg:#f0f5f2;
+      --surface:#ffffff;
+      --text:#1a3d32;
+      --muted:#5a7a6e;
+      --border:#d8e5e0;
+
+      --accent:#22a855;
+      --accent-light:#e8f5e9;
+      --accent-ink:#ffffff;
+      --brand-dark:#1a3d32;
+
+      --radius:14px;
+      --shadow:0 10px 30px rgba(34,168,85,.08);
+    }
+
+    @keyframes fadeIn{
+      from{ opacity:0; transform:translateY(10px); }
+      to{ opacity:1; transform:translateY(0); }
+    }
+
+    @keyframes slideInLeft{
+      from{ opacity:0; transform:translateX(-20px); }
+      to{ opacity:1; transform:translateX(0); }
+    }
+
+    @keyframes slideInRight{
+      from{ opacity:0; transform:translateX(20px); }
+      to{ opacity:1; transform:translateX(0); }
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--text);
+      background:
+        radial-gradient(900px 450px at 20% -10%, rgba(34,168,85,.12), transparent 60%),
+        radial-gradient(900px 450px at 85% 0%, rgba(26,61,50,.08), transparent 55%),
+        var(--bg);
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: linear-gradient(90deg, var(--brand-dark), #2d5644);
+      color: #fff;
+      border-bottom: 3px solid var(--accent);
+      box-shadow: 0 4px 20px rgba(34,168,85,.15);
+    }
+
+    .topbar-inner{
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      min-width:0;
+      font-weight:700;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      animation: slideInLeft 0.5s ease-out;
+    }
+
+    .school-info{
+      font-size:12px;
+      color:rgba(255,255,255,.7);
+      animation: slideInRight 0.5s ease-out;
+      letter-spacing:.5px;
+    }
+
+    .brand-badge{
+      width:14px;
+      height:14px;
+      border-radius:4px;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(34,168,85,.25);
+      flex: 0 0 auto;
+    }
+
+    .container{
+      max-width: 960px;
+      margin: 26px auto;
+      padding: 0 18px;
+    }
+
+    .card{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: fadeIn 0.7s ease-out;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(34,168,85,.12);
+    }
+
+    .card-header{
+      padding: 18px 18px 10px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title{
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .card-subtitle{
+      margin: 6px 0 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .card-body{
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    label{
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    input{
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px;
+      font-size: 16px;
+      outline: none;
+      background: #fff;
+      transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    input:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(34,168,85,.15);
+      transform: translateY(-2px);
+    }
+
+    .row{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button{
+      appearance: none;
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      background: var(--accent);
+      color: var(--accent-ink);
+      transition: transform .08s ease, filter .2s ease, box-shadow .2s ease;
+      box-shadow: 0 4px 12px rgba(34,168,85,.2);
+    }
+
+    button:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(34,168,85,.3);
+      filter: brightness(1.05);
+    }
+
+    button:active{ transform: translateY(0); }
+
+    button:focus{
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(34,168,85,.25);
+    }
+
+    .link{
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .link a{
+      color: inherit;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px dashed #c7cdd6;
+    }
+
+    .link a:hover{ border-bottom-style: solid; }
+
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 540px){
+      button{ width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand" title="Brechtwahl">
+        <span class="brand-badge" aria-hidden="true"></span>
+        <span>Brechtwahl</span>
+      </div>
+      <div class="school-info">brecht schule hamburg</div>
+      <!-- optional: Direktlink, falls jemand schon eingeloggt ist -->
+      <div class="link">
+        <a href="/polls.html">Zur Übersicht</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card" aria-label="Login">
+      <div class="card-header">
+        <h1 class="card-title">Login</h1>
+        <p class="card-subtitle">Melde dich mit deinem Namen an.</p>
+      </div>
+
+      <div class="card-body">
+        <div>
+          <label for="username">Username</label><br />
+          <input id="username" placeholder="z. B. luca" autocomplete="username" />
+        </div>
+
+        <div class="row">
+          <button type="button" onclick="doLogin()">Login</button>
+          <div class="link"><a href="/admin.html">Admin</a></div>
+        </div>
+
+        <div class="hint">
+          Hinweis: Nach dem Login landest du in der Übersicht und wählst dort die Abstimmung aus.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    // Enter-Taste im Input triggert Login
+    document.getElementById('username').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+</body>
+</html>

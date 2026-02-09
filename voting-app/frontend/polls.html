@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Abstimmungen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f0f5f2; --surface:#fff; --text:#1a3d32; --muted:#5a7a6e; --border:#d8e5e0;
+      --accent:#22a855; --brand-dark:#1a3d32; --radius:14px; --shadow:0 10px 30px rgba(34,168,85,.08);
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);
+      background:radial-gradient(900px 450px at 20% -10%, rgba(34,168,85,.12), transparent 60%), var(--bg);animation:fadeIn .6s ease-out;}
+    .topbar{background:linear-gradient(90deg,var(--brand-dark),#2d5644);color:#fff;border-bottom:3px solid var(--accent);box-shadow:0 4px 20px rgba(34,168,85,.15)}
+    .topbar-inner{max-width:960px;margin:0 auto;padding:14px 18px;display:flex;justify-content:space-between;gap:20px;align-items:center}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:700;animation:slideIn .5s ease-out}
+    .school-info{font-size:12px;color:rgba(255,255,255,.7);animation:slideIn .5s ease-out;letter-spacing:.5px}
+    .badge{width:14px;height:14px;border-radius:4px;background:var(--accent)}
+    .container{max-width:960px;margin:26px auto;padding:0 18px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;animation:fadeIn .7s ease-out;transition:transform .3s ease,box-shadow .3s ease}
+    .card:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(34,168,85,.12)}
+    .header{padding:18px;border-bottom:1px solid var(--border)}
+    .header h1{margin:0;font-size:20px}
+    .header p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .list{display:grid;gap:10px;padding:18px}
+    .poll{
+      display:flex;justify-content:space-between;align-items:center;gap:14px;
+      padding:14px;border:1px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;
+      text-decoration:none;color:inherit;transition:all .3s ease;animation:fadeIn .6s ease-out;
+    }
+    .poll:hover{border-color:var(--accent);background:rgba(34,168,85,.05);transform:translateX(4px);box-shadow:0 4px 12px rgba(34,168,85,.15)}
+    .meta{color:var(--muted);font-size:12px}
+    .tag{font-size:12px;font-weight:700;background:rgba(34,168,85,.2);color:var(--accent);padding:6px 10px;border-radius:999px;transition:all .3s ease}
+    .poll:hover .tag{background:rgba(34,168,85,.3);transform:scale(1.05)}
+    button{border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;transition:all .3s ease}
+    button:hover{background:rgba(34,168,85,.2);border-color:rgba(34,168,85,.4);transform:translateY(-2px)}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><span class="badge"></span> Brechtwahl</div>
+      <div class="school-info">brecht schule hamburg</div>
+      <button type="button" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="header">
+        <h1>Abstimmungen</h1>
+        <p>Wähle eine Abstimmung aus.</p>
+      </div>
+
+      <div class="list" id="pollList">
+        <!-- Wird per JS befüllt -->
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    // Minimal-Demo ohne Backend:
+    const demoPolls = [
+      { id: "demo-1", title: "Soll es „Schule“ geben?", status: "aktiv" },
+      { id: "demo-2", title: "Soll die Mensa länger offen sein?", status: "aktiv" },
+    ];
+
+    const pollList = document.getElementById("pollList");
+    pollList.innerHTML = demoPolls.map(p => `
+      <a class="poll" href="/vote.html?id=${encodeURIComponent(p.id)}">
+        <div>
+          <div style="font-weight:700">${p.title}</div>
+          <div class="meta">ID: ${p.id}</div>
+        </div>
+        <span class="tag">${p.status}</span>
+      </a>
+    `).join("");
+  </script>
+</body>
+</html>

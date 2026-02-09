@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --accent:#22a855;
+      --bg:#f0f5f2;
+      --border:#d8e5e0;
+      --text:#1a3d32;
+      --muted:#5a7a6e;
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+    body{font-family:system-ui;margin:20px;max-width:900px;color:var(--text);background:var(--bg);animation:fadeIn .6s ease-out}
+    h1,h2{animation:slideIn .5s ease-out}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end;animation:fadeIn .7s ease-out}
+    input,select{padding:10px 12px;border:1px solid var(--border);border-radius:8px;transition:all .3s ease}
+    input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(34,168,85,.15);transform:translateY(-2px)}
+    button{padding:10px 14px;cursor:pointer;background:var(--accent);color:#fff;border:1px solid var(--border);border-radius:8px;font-weight:600;transition:all .3s ease;box-shadow:0 2px 8px rgba(34,168,85,.15)}
+    button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(34,168,85,.25);filter:brightness(1.05)}
+    button:active{transform:translateY(0)}
+    table{width:100%;border-collapse:collapse;margin-top:10px;animation:fadeIn .8s ease-out}
+    th,td{border-bottom:1px solid var(--border);padding:12px;text-align:left;font-size:13px}
+    th{background:rgba(34,168,85,.05);font-weight:600;color:var(--text)}
+    tr:hover{background:rgba(34,168,85,.03)}
+    .kpi{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0;animation:fadeIn .7s ease-out}
+    .kpi div{border:1px solid var(--border);padding:16px;border-radius:12px;background:#fff;transition:all .3s ease;animation:fadeIn .8s ease-out;box-shadow:0 2px 8px rgba(34,168,85,.08)}
+    .kpi div:hover{transform:translateY(-4px);box-shadow:0 8px 20px rgba(34,168,85,.15);border-color:var(--accent)}
+    .kpi div b{color:var(--accent);font-size:24px;display:block}
+    .muted{color:var(--muted);font-size:12px;margin-top:4px}
+  </style>
+</head>
+<body>
+  <header style="background:linear-gradient(90deg,#1a3d32,#2d5644);color:#fff;padding:16px;margin:-20px -20px 20px;border-bottom:3px solid var(--accent);box-shadow:0 4px 12px rgba(34,168,85,.15)">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:20px">
+      <h1 style="margin:0">Admin Panel</h1>
+      <div style="font-size:12px;opacity:.8">brecht schule hamburg</div>
+    </div>
+  </header>
+  <h1 style="margin-top:0;color:var(--text)">Abstimmungsverwaltung</h1>
+
+  <div class="row">
+    <div>
+      <div>Admin-Code</div>
+      <input id="admincode" placeholder="Gonzo" />
+    </div>
+    <div>
+      <div>Abstimmung</div>
+      <select id="pollSelect"></select>
+    </div>
+    <button onclick="loadAll()">Laden</button>
+  </div>
+
+  <p class="muted">Zeigt nur Zeitpunkte + Ja/Nein (keine Namen).</p>
+
+  <div class="kpi">
+    <div><b id="kTotal">–</b><div class="muted">Gesamt</div></div>
+    <div><b id="kYes">–</b><div class="muted">Ja</div></div>
+    <div><b id="kNo">–</b><div class="muted">Nein</div></div>
+    <div><b id="kFirst">–</b><div class="muted">Erste Stimme</div></div>
+    <div><b id="kLast">–</b><div class="muted">Letzte Stimme</div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>Zeit</th><th>Stimme</th></tr></thead>
+    <tbody id="voteRows"></tbody>
+  </table>
+
+  <hr>
+
+  <h2>Abstimmung verwalten</h2>
+
+  <div class="row">
+    <div style="flex:1;min-width:320px">
+      <div>Neue Frage</div>
+      <input id="newTitle" style="width:100%" placeholder="Soll die Mensa länger offen sein?" />
+    </div>
+    <button onclick="createPoll()">Anlegen</button>
+    <button onclick="deletePoll()">Löschen</button>
+  </div>
+
+  <script>
+    function adminCode(){ return document.getElementById('admincode').value.trim(); }
+    function headers(){ return { 'X-Admin-Code': adminCode() }; }
+    function fmtTs(ts){ if(!ts) return '–'; return new Date(ts*1000).toLocaleString('de-DE'); }
+
+    async function fetchJson(url, opts={}){
+      const res = await fetch(url, opts);
+      if(!res.ok) throw new Error(await res.text());
+      return await res.json();
+    }
+
+    async function loadPolls(){
+      const polls = await fetchJson('/api/polls');
+      const sel = document.getElementById('pollSelect');
+      sel.innerHTML = polls.map(p => `<option value="${p.id}">${p.title} (${p.id})</option>`).join('');
+    }
+
+    async function loadAll(){
+      if(!adminCode()) return alert('Admin-Code fehlt');
+      const pollId = document.getElementById('pollSelect').value;
+      if(!pollId) return alert('Keine Abstimmung gewählt');
+
+      const r = await fetchJson(`/api/admin/results?poll_id=${encodeURIComponent(pollId)}`, { headers: headers() });
+      document.getElementById('kTotal').textContent = r.total;
+      document.getElementById('kYes').textContent = r.yes;
+      document.getElementById('kNo').textContent = r.no;
+
+      const v = await fetchJson(`/api/admin/votes?poll_id=${encodeURIComponent(pollId)}`, { headers: headers() });
+      document.getElementById('kFirst').textContent = fmtTs(v.first_vote_at);
+      document.getElementById('kLast').textContent = fmtTs(v.last_vote_at);
+
+      document.getElementById('voteRows').innerHTML =
+        v.votes.map(x => `<tr><td>${fmtTs(x.created_at)}</td><td>${x.choice}</td></tr>`).join('');
+    }
+
+    async function createPoll(){
+      if(!adminCode()) return alert('Admin-Code fehlt');
+      const title = document.getElementById('newTitle').value.trim();
+      if(title.length < 5) return alert('Frage zu kurz');
+
+      const created = await fetchJson('/api/admin/polls', {
+        method:'POST',
+        headers: { ...headers(), 'Content-Type':'application/json' },
+        body: JSON.stringify({ title })
+      });
+
+      document.getElementById('newTitle').value = '';
+      await loadPolls();
+      document.getElementById('pollSelect').value = created.id;
+      await loadAll();
+    }
+
+    async function deletePoll(){
+      if(!adminCode()) return alert('Admin-Code fehlt');
+      const pollId = document.getElementById('pollSelect').value;
+      if(!pollId) return alert('Keine Abstimmung gewählt');
+      if(!confirm(`Wirklich löschen?\n${pollId}\nAlle Votes werden entfernt.`)) return;
+
+      await fetchJson(`/api/admin/polls/${encodeURIComponent(pollId)}`, {
+        method:'DELETE',
+        headers: headers()
+      });
+
+      await loadPolls();
+      alert('Gelöscht');
+    }
+
+    loadPolls().catch(()=>alert('Konnte Poll-Liste nicht laden'));
+  </script>
+</body>
+</html>

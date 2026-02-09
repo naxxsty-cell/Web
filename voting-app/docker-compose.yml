@@ -1,0 +1,29 @@
+services:
+  backend:
+    build: ./backend
+    container_name: voting-backend
+    environment:
+      - DB_PATH=/data/votes.db
+      - ADMIN_CODE=Gonzo
+      - TOKEN_SECRET=change-me
+      - TOKEN_TTL_SECONDS=86400
+    volumes:
+      - voting_data:/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:alpine
+    container_name: voting-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/conf.d:/etc/nginx/conf.d:ro
+    restart: unless-stopped
+
+volumes:
+  voting_data:

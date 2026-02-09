@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Look what I can do</title>
+  <meta name="description" content="A tiny, over-engineered single-file demo page." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg0:#05060a; --bg1:#080b14; --card:#0d1226cc; --border:#ffffff1a;
+      --txt:#eaf0ff; --mut:#aab4d6; --mut2:#7f8bb5;
+      --a:#7aa2ff; --b:#9a7bff; --c:#43ffd7; --d:#ffd26a;
+      --shadow: 0 16px 60px #00000080;
+      --r:16px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; font-family:"Space Grotesk", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--txt);
+      background:
+        radial-gradient(900px 600px at 10% 10%, #7aa2ff22, transparent 60%),
+        radial-gradient(700px 500px at 80% 20%, #9a7bff22, transparent 55%),
+        radial-gradient(700px 600px at 60% 90%, #43ffd720, transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+    .noise{ position:fixed; inset:0; pointer-events:none; opacity:.07; mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+    }
+    .wrap{ max-width:1100px; margin:0 auto; padding: clamp(18px, 4vw, 48px); }
+
+    /* Top bar */
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding: 14px 16px; border:1px solid var(--border); border-radius: 999px;
+      background: linear-gradient(180deg, #ffffff10, #ffffff05);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+    .brand{ display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:-.02em; }
+    .dot{ width:10px; height:10px; border-radius:999px; background: conic-gradient(from 90deg, var(--a), var(--b), var(--c), var(--d), var(--a));
+      box-shadow: 0 0 0 4px #ffffff10;
+    }
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .chip{ font-size:12px; padding: 8px 10px; border-radius:999px; border:1px solid var(--border);
+      background:#0a0f21cc; color:var(--mut);
+    }
+
+    /* Hero */
+    .hero{ margin-top: 22px; display:grid; grid-template-columns: 1.2fr .8fr; gap: 18px; align-items:stretch; }
+    @media (max-width: 920px){ .hero{ grid-template-columns: 1fr; } }
+
+    .card{
+      border:1px solid var(--border);
+      border-radius: var(--r);
+      background: linear-gradient(180deg, #ffffff0a, #ffffff05);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .card::before{
+      content:""; position:absolute; inset:-2px; opacity:.25;
+      background: radial-gradient(600px 240px at 20% 0%, #7aa2ff55, transparent 70%),
+                  radial-gradient(500px 220px at 80% 30%, #9a7bff55, transparent 75%),
+                  radial-gradient(600px 260px at 60% 100%, #43ffd744, transparent 75%);
+      filter: blur(18px);
+      z-index:0;
+    }
+    .card > *{ position:relative; z-index:1; }
+
+    .heroMain{ padding: 26px 26px 22px; }
+    h1{ margin:0; font-size: clamp(30px, 4vw, 52px); line-height: 1.03; letter-spacing:-.04em; }
+    .sub{ margin-top: 12px; color: var(--mut); font-size: 16px; line-height: 1.55; max-width: 58ch; }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 18px; }
+    .btn{ border:1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+      background: #0a0f21cc; color: var(--txt);
+      font-weight: 600; cursor:pointer; transition: transform .12s ease, background .12s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); background:#0f1735cc; }
+    .btn.primary{ background: linear-gradient(135deg, #7aa2ff55, #43ffd733); border-color:#7aa2ff55; }
+    .btn.small{ font-size: 12px; padding: 8px 10px; border-radius: 999px; }
+
+    /* Side */
+    .side{ display:grid; gap: 18px; }
+    .panel{ padding: 18px; }
+    .kpiRow{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+    .kpi{
+      padding: 12px; border-radius: 14px; border:1px solid var(--border);
+      background:#070b18cc;
+    }
+    .kpi .n{ font-size: 18px; font-weight: 700; letter-spacing:-.02em; }
+    .kpi .l{ font-size: 12px; color: var(--mut2); margin-top: 4px; }
+
+    /* Grid */
+    .grid{ margin-top: 18px; display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
+    .tile{ padding: 16px; }
+    .tile h3{ margin: 0; font-size: 14px; color: var(--mut2); font-weight: 600; letter-spacing: .02em; }
+    .tile p{ margin: 8px 0 0; color: var(--mut); line-height: 1.5; }
+
+    /* Mini terminal */
+    .terminal{ margin-top: 14px; border-top:1px solid var(--border); background:#040612aa; padding: 14px 16px; }
+    .line{ display:flex; gap:10px; align-items:flex-start; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; color: #cfe0ff; }
+    .prompt{ color:#7aa2ff; }
+    .mut{ color:#94a5d8; }
+
+    /* Canvas */
+    .canvasWrap{ padding: 0; }
+    canvas{ display:block; width:100%; height: 320px; background: radial-gradient(900px 240px at 50% 40%, #ffffff08, transparent 55%);
+      border-bottom:1px solid var(--border);
+    }
+    .canvasMeta{ padding: 14px 16px; display:flex; align-items:center; justify-content:space-between; gap: 12px; }
+    .hint{ color: var(--mut2); font-size: 12px; }
+
+    /* Footer */
+    .footer{ margin: 22px 0 8px; color: var(--mut2); font-size: 12px; display:flex; justify-content:space-between; gap: 10px; flex-wrap:wrap; }
+    a{ color: var(--a); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    /* Toast */
+    .toast{ position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(18px);
+      opacity: 0; transition: all .22s ease;
+      background:#0a0f21f0; border:1px solid var(--border);
+      padding: 10px 12px; border-radius: 999px; color: var(--txt); font-size: 13px;
+      box-shadow: var(--shadow);
+    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+
+  <div class="wrap">
+    <div class="top">
+      <div class="brand"><span class="dot"></span>Look what I can do</div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <section class="hero">
+      <div class="card heroMain">
+        <h1>Eine kleine Seite, die sich <span style="background:linear-gradient(90deg,var(--a),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent;">zu groß</span> anfühlt.</h1>
+        <p class="sub">
+          Das ist eine "Proof"-Mini-Landing-Page als neue Datei im Repo.
+          Kein Framework, kein Build-Step — nur <b>HTML + CSS + JS</b>.
+          Wenn du willst, mache ich daraus eine echte Brechtwahl-Startseite.
+        </p>
+        <div class="actions">
+          <button class="btn primary" id="btnConfetti">Confetti</button>
+          <button class="btn" id="btnTheme">Theme flip</button>
+          <button class="btn" id="btnCopy">Copy deploy command</button>
+          <button class="btn small" id="btnFocus">Focus mode</button>
+        </div>
+
+        <div class="terminal" aria-label="mini terminal">
+          <div class="line"><span class="prompt">$</span><span>docker compose up -d --build (PORT=8081)</span></div>
+          <div class="line"><span class="prompt">#</span><span class="mut">läuft auf Port 8081 (oder PORT=… setzen)</span></div>
+          <div class="line"><span class="prompt">→</span><span id="sys" class="mut">checking system…</span></div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="card panel">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="font-weight:700; letter-spacing:-.02em;">Live</div>
+            <div class="hint">interaktiv & lokal</div>
+          </div>
+          <div class="kpiRow" style="margin-top:12px;">
+            <div class="kpi"><div class="n" id="kpiTime">--:--</div><div class="l">Zeit</div></div>
+            <div class="kpi"><div class="n" id="kpiHost">…</div><div class="l">Host</div></div>
+            <div class="kpi"><div class="n" id="kpiFPS">—</div><div class="l">FPS</div></div>
+            <div class="kpi"><div class="n" id="kpiMood">⚡</div><div class="l">Mood</div></div>
+          </div>
+        </div>
+
+        <div class="card canvasWrap">
+          <canvas id="c" width="900" height="360"></canvas>
+          <div class="canvasMeta">
+            <div style="font-weight:700">Particle Flow</div>
+            <div class="hint">Beweg die Maus / touch</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card tile">
+        <h3>Warum das nützlich ist</h3>
+        <p>Wenn der Deploy steht, kannst du beliebige Frontends deployen: Landing Page, Admin Panel, Voting UI.</p>
+      </div>
+      <div class="card tile">
+        <h3>Was als nächstes</h3>
+        <p>CI/CD, Domain, HTTPS, richtige Startseite für Brechtwahl, plus Deploy per Portainer Stack.</p>
+      </div>
+      <div class="card tile">
+        <h3>„Beweis“</h3>
+        <p>Micro-Interaktionen, animierter Canvas, Copy-to-clipboard, Theme toggle — ohne Framework.</p>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div>Made for Luca · <span id="build">build</span></div>
+      <div><a href="#" id="reset">reset</a></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">copied.</div>
+
+  <script>
+    // --- tiny helpers ---
+    const $ = (q) => document.querySelector(q);
+    const toast = (t) => {
+      const el = $('#toast');
+      el.textContent = t;
+      el.classList.add('show');
+      clearTimeout(el.__t);
+      el.__t = setTimeout(() => el.classList.remove('show'), 1400);
+    };
+
+    // --- top chips ---
+    const chips = [
+      'HTML/CSS/JS',
+      'Single file',
+      'Docker-ready',
+      'Fast',
+      'No build step'
+    ];
+    $('#chips').innerHTML = chips.map(c => `<span class="chip">${c}</span>`).join('');
+
+    // --- KPIs ---
+    function tickClock(){
+      $('#kpiTime').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      $('#kpiHost').textContent = location.host || 'local';
+      setTimeout(tickClock, 1000);
+    }
+    tickClock();
+
+    // --- system line ---
+    const sys = $('#sys');
+    const bits = [
+      'system ok · network ok',
+      'gpu ok · vibes ok',
+      'docker soon™',
+      'ready.'
+    ];
+    let bi = 0;
+    setInterval(() => { sys.textContent = bits[bi++ % bits.length]; }, 1600);
+
+    // --- theme flip ---
+    let flipped = false;
+    $('#btnTheme').addEventListener('click', () => {
+      flipped = !flipped;
+      document.documentElement.style.setProperty('--bg0', flipped ? '#0a0605' : '#05060a');
+      document.documentElement.style.setProperty('--bg1', flipped ? '#130c08' : '#080b14');
+      document.documentElement.style.setProperty('--a', flipped ? '#ffd26a' : '#7aa2ff');
+      document.documentElement.style.setProperty('--c', flipped ? '#ff6aa8' : '#43ffd7');
+      $('#kpiMood').textContent = flipped ? '🔥' : '⚡';
+      toast(flipped ? 'theme: warm' : 'theme: cool');
+    });
+
+    // --- copy deploy command ---
+    const deployCmd = `cd look-what-i-can-do && docker compose up -d --build (PORT=8081)`;
+    $('#btnCopy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(deployCmd);
+        toast('deploy command copied');
+      } catch {
+        toast('copy failed (permissions)');
+      }
+    });
+
+    // --- focus mode ---
+    $('#btnFocus').addEventListener('click', () => {
+      document.body.classList.toggle('focus');
+      const on = document.body.classList.contains('focus');
+      toast(on ? 'focus on' : 'focus off');
+      if (on) {
+        // simple focus: dim non-hero content
+        document.querySelectorAll('.grid, .footer, .top').forEach(el => el.style.opacity = '0.35');
+      } else {
+        document.querySelectorAll('.grid, .footer, .top').forEach(el => el.style.opacity = '');
+      }
+    });
+
+    // --- reset ---
+    $('#reset').addEventListener('click', (e) => {
+      e.preventDefault();
+      location.reload();
+    });
+
+    // --- confetti ---
+    function confettiBurst(){
+      const N = 90;
+      for (let i=0;i<N;i++){
+        const s = document.createElement('div');
+        const x = 50 + (Math.random()*20-10);
+        const hue = Math.floor(Math.random()*360);
+        s.style.cssText = `position:fixed;left:${x}vw;top:40vh;width:8px;height:8px;border-radius:2px;background:hsl(${hue} 95% 70%);`+
+          `transform:translate(-50%,-50%);z-index:9999;pointer-events:none;`;
+        document.body.appendChild(s);
+        const dx = (Math.random()*2-1)*240;
+        const dy = -120 - Math.random()*220;
+        const r = (Math.random()*2-1)*540;
+        const d = 700 + Math.random()*500;
+        s.animate([
+          { transform:`translate(-50%,-50%) translate(0,0) rotate(0deg)`, opacity:1 },
+          { transform:`translate(-50%,-50%) translate(${dx}px,${dy}px) rotate(${r}deg)`, opacity:0 }
+        ], { duration:d, easing:'cubic-bezier(.12,.85,.2,1)' }).onfinish = () => s.remove();
+      }
+    }
+    $('#btnConfetti').addEventListener('click', confettiBurst);
+
+    // --- canvas particles ---
+    const canvas = $('#c');
+    const ctx = canvas.getContext('2d');
+    const DPR = Math.min(2, window.devicePixelRatio || 1);
+
+    function resize(){
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width * DPR);
+      canvas.height = Math.floor(rect.height * DPR);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const rand = (a,b)=>a+Math.random()*(b-a);
+    const P = [];
+    const COUNT = 120;
+    for(let i=0;i<COUNT;i++){
+      P.push({
+        x: rand(0,1), y: rand(0,1),
+        vx: rand(-.08,.08), vy: rand(-.08,.08),
+        r: rand(1.2,2.7),
+        hue: rand(190, 330)
+      });
+    }
+
+    let mx=0.5, my=0.5;
+    const setM = (e)=>{
+      const rect = canvas.getBoundingClientRect();
+      const px = (e.touches ? e.touches[0].clientX : e.clientX);
+      const py = (e.touches ? e.touches[0].clientY : e.clientY);
+      mx = (px-rect.left)/rect.width;
+      my = (py-rect.top)/rect.height;
+    };
+    canvas.addEventListener('mousemove', setM);
+    canvas.addEventListener('touchmove', setM, {passive:true});
+
+    let last = performance.now();
+    let fpsSm = 60;
+
+    function frame(t){
+      const dt = Math.min(0.03, (t-last)/1000);
+      last = t;
+
+      // fps
+      const fps = 1/Math.max(1e-6, dt);
+      fpsSm = fpsSm*0.9 + fps*0.1;
+      $('#kpiFPS').textContent = Math.round(fpsSm);
+
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0,0,w,h);
+
+      // soft background glow
+      const gx = mx*w, gy=my*h;
+      const grad = ctx.createRadialGradient(gx,gy, 0, gx,gy, Math.max(w,h)*0.6);
+      grad.addColorStop(0, 'rgba(122,162,255,0.15)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,w,h);
+
+      for(const p of P){
+        // flow field: swirl around mouse
+        const dx = (p.x - mx);
+        const dy = (p.y - my);
+        const dist = Math.sqrt(dx*dx + dy*dy) + 0.001;
+        const pull = Math.min(0.18, 0.03 / dist);
+
+        // perpendicular swirl + slight attraction
+        p.vx += (-dy) * pull * dt;
+        p.vy += ( dx) * pull * dt;
+        p.vx += (-dx) * 0.02 * dt;
+        p.vy += (-dy) * 0.02 * dt;
+
+        // damping
+        p.vx *= 0.995;
+        p.vy *= 0.995;
+
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+
+        // wrap
+        if(p.x<0) p.x+=1; if(p.x>1) p.x-=1;
+        if(p.y<0) p.y+=1; if(p.y>1) p.y-=1;
+
+        const X = p.x*w, Y=p.y*h;
+
+        // links
+        for(const q of P){
+          const ddx = p.x-q.x, ddy=p.y-q.y;
+          const d2 = ddx*ddx + ddy*ddy;
+          if(d2>0 && d2<0.010){
+            const a = (0.010 - d2) * 60;
+            ctx.strokeStyle = `rgba(154,123,255,${Math.min(0.20,a)})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(X,Y);
+            ctx.lineTo(q.x*w, q.y*h);
+            ctx.stroke();
+          }
+        }
+
+        ctx.fillStyle = `hsla(${p.hue}, 90%, 70%, 0.9)`;
+        ctx.beginPath();
+        ctx.arc(X,Y, p.r*DPR, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    // footer build stamp
+    $('#build').textContent = new Date().toISOString().slice(0,10);
+  </script>
+</body>
+</html>

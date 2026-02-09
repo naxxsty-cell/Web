@@ -1,0 +1,295 @@
+Dokumentation: Voting-Webapp auf Ubuntu-Server (Docker + Portainer + Git + Tailscale)
+
+Zwecke
+
+Schulinterne Abstimmungen:
+	•	Login mit Username (Dummy)
+	•	Abstimmen Ja/Nein
+	•	Admin-Seite zeigt nur aggregierte Ergebnisse (ohne Namen)
+hallo
+⸻
+
+1) Server-Überblick
+
+Host-System
+	•	Ubuntu Server (bei euch aktuell 24.04, funktioniert wie 22.04)
+	•	Zugriff per SSH und Tunnel 
+	•	Docker läuft auf dem Host
+	•	Portainer verwaltet Container/Stacks
+	•	Tailscale für Zugriff von außen (VPN)
+
+Relevante IPs
+	•	LAN-IP (internes Netzwerk): z. B. 192.168.25.185
+	•	Tailscale-IP (VPN): z. B. 100.116.152.63
+
+⸻hm
+
+2) Code-Standort auf dem Server
+
+Repo liegt lokal auf dem Server unter:
+
+/srv/apps/Brechtwahl
+
+Projektpfad:
+
+/srv/apps/Brechtwahl/voting-app
+
+Struktur:
+
+voting-app/
+├─ docker-compose.yml
+├─ backend/
+│  ├─ Dockerfile
+│  ├─ main.py
+│  └─ requirements.txt
+└─ frontend/
+   ├─ index.html
+   ├─ vote.html
+   ├─ admin.html
+   ├─ app.js
+   └─ conf.d/
+      └─ default.conf
+
+Wichtig:
+Frontend wird als statische Dateien von Nginx ausgeliefert. 
+Backend ist FastAPI (Uvicorn). Persistenz über SQLite in einem Docker-Volume.
+
+⸻
+
+3) Laufzeit-Architektur
+
+Container
+	1.	voting-frontend
+
+	•	Image: nginx:alpine
+	•	Port: 8080 auf dem Host → 80 im Container
+	•	Mounts:
+	•	/srv/apps/Brechtwahl/voting-app/frontend → /usr/share/nginx/html (read-only)
+	•	/srv/apps/Brechtwahl/voting-app/frontend/conf.d → /etc/nginx/conf.d (read-only)
+	•	Proxy-Regel:
+	•	/api/* → http://voting-backend:8000/
+
+	2.	voting-backend
+
+	•	Image: voting-backend:latest (lokal gebaut)
+	•	Port: intern 8000 (nicht öffentlich gemappt)
+	•	Persistenz:
+	•	Docker Volume voting_data → /data
+	•	SQLite-Datei: /data/votes.db
+
+	3.	portainer
+
+	•	UI für Containerverwaltung
+	•	Ports typischerweise:
+	•	9000 (HTTP) und/oder 9443 (HTTPS)
+
+⸻
+
+4) Website-URLs
+
+LAN
+	•	Voting: http://192.168.25.185:8080
+	•	Admin: http://192.168.25.185:8080/admin.html
+
+Tailscale (VPN, außerhalb des LAN)
+	•	Voting: http://100.116.152.63:8080
+	•	Admin: http://100.116.152.63:8080/admin.html
+
+⸻
+
+5) Nginx-Konfiguration (Frontend)
+
+Datei:
+
+/srv/apps/Brechtwahl/voting-app/frontend/conf.d/default.conf
+
+Inhalt (vereinfacht):
+
+server {
+  listen 80;
+
+  root /usr/share/nginx/html;
+  index index.html;
+
+  location / {
+    try_files $uri $uri/ /index.html =404;
+  }
+
+  location /api/ {
+    proxy_pass http://backend:8000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
+
+Warum try_files ... =404?
+Verhindert Redirect-Loops/500, wenn index.html fehlt.
+
+⸻
+
+6) Portainer-Setup (wie es bei euch stabil läuft)
+
+Warum NICHT „Deploy from Git repository“ in Portainer?
+
+Portainer legt Checkouts unter /data/compose/<id> an. Bei euch kam es zu:
+	•	falschen Typen (Datei vs Ordner)
+	•	fehlenden Dateien im Checkout
+	•	Nginx lief, aber Webroot war leer → 404/500
+
+Deshalb: Code liegt stabil unter /srv/apps/... und wird von dort gemountet.
+
+Backend-Build in Portainer
+
+Portainer kann beim „Web editor“-Stack nicht zuverlässig build: aus Host-Pfaden. Daher:
+	•	Backend-Image wird auf dem Host gebaut (CLI)
+	•	Portainer startet Container aus diesem Image
+
+⸻
+
+7) Start / Neustart / Betrieb
+
+Container-Status anzeigen
+
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+
+Logs
+
+docker logs --tail 200 voting-frontend
+docker logs --tail 200 voting-backend
+
+Neustart einzelner Services
+
+docker restart voting-frontend
+docker restart voting-backend
+
+Kompletter Neustart (beide)
+
+docker restart voting-frontend voting-backend
+
+
+⸻
+
+8) Update-Workflow (wenn jemand Code geändert hat)
+
+Grundregel
+	1.	Änderungen werden von Kollegen lokal gemacht → Commit + Push nach GitHub (main)
+	2.	Server zieht neue Version → git pull
+	3.	Je nach Änderung: Frontend sofort, Backend neu bauen
+
+⸻
+
+
+Standard-Update (immer, egal was geändert wurde)
+
+cd /srv/apps/Brechtwahl
+git pull
+
+cd /srv/apps/Brechtwahl/voting-app
+docker compose up -d --build
+
+
+Nur wenn irgendwas „komisch“ ist (502, Container hängen in anderen Netzwerken etc.):
+
+cd /srv/apps/Brechtwahl
+git pull
+
+cd /srv/apps/Brechtwahl/voting-app
+docker compose down
+docker compose up -d --build
+
+Wichtig: kein -v bei down, sonst löschst du die DB (Votes).
+
+Checks danach (30 Sekunden)
+
+docker compose ps
+curl -i http://127.0.0.1:8080/api/polls
+
+Wenn 200 OK + JSON kommt, ist alles sauber live.
+⸻
+
+9) Daten / Persistenz
+
+Backend speichert in SQLite:
+	•	Pfad im Container: /data/votes.db
+	•	/data ist Docker-Volume voting_data
+
+Volume ansehen
+
+docker volume ls | grep voting
+
+Achtung beim Löschen
+	•	Wenn du voting_data löschst, sind Votes weg.
+	•	Container-Neustarts löschen keine Votes (Volume bleibt).
+
+⸻
+
+10) Typische Fehler & schnelle Checks
+
+Website geht nicht
+	1.	Container laufen?
+
+docker ps
+
+	2.	Nginx antwortet lokal?
+
+curl -I http://127.0.0.1:8080
+
+	3.	Nginx-Fehler?
+
+docker logs --tail 200 voting-frontend
+
+500 bei Nginx
+	•	Oft: Redirect-Loop wegen try_files + fehlendem index.html
+	•	Prüfen:
+
+ls -la /srv/apps/Brechtwahl/voting-app/frontend
+
+Tailscale geht nicht, LAN geht
+	•	Tailscale-Client nicht verbunden oder ACL blockiert
+	•	UFW blockiert Port 8080
+
+sudo ufw status
+sudo ufw allow 8080/tcp
+sudo ufw reload
+
+
+⸻
+
+11) Wie man zusätzlich eine weitere Website hostet (Best Practice)
+
+Es gibt 2 saubere Varianten:
+
+Variante 1: Neuer Nginx-Container pro Website (einfach, für Schule ok)
+	•	Jeder Webdienst bekommt einen eigenen Port:
+	•	Voting: :8080
+	•	Website2: :8081
+	•	Vorteil: simpel, getrennt
+	•	Nachteil: mehrere Ports
+
+Beispiel: zweiter Stack website2 mit:
+	•	Nginx container
+	•	Port 8081:80
+	•	Bind-mount auf /srv/apps/<projekt>/frontend
+
+Variante 2: Ein zentraler Reverse-Proxy (professioneller)
+	•	Ein Nginx/Traefik-Proxy auf Port 80/443
+	•	Routing per Domain/Subdomain:
+	•	vote.schule.local → voting-frontend
+	•	info.schule.local → website2
+	•	Vorteil: sauber, später HTTPS leicht
+	•	Nachteil: etwas mehr Setup
+
+Wenn ihr später HTTPS wollt, ist Reverse-Proxy + Let’s Encrypt der richtige Schritt.
+
+⸻
+
+12) Minimaler „Hand-over“-Text (für andere KI / Person)
+
+Dieser Server hostet eine Voting-Webapp via Docker. Code liegt unter /srv/apps/Brechtwahl/voting-app. 
+Frontend ist statisch und wird über nginx:alpine als Container voting-frontend auf Host-Port 8080 ausgeliefert; 
+Konfiguration liegt in frontend/conf.d/default.conf und proxy’t /api/* auf voting-backend:8000. Backend ist FastAPI/Uvicorn 
+und läuft als Container voting-backend aus dem lokal gebauten Image voting-backend:latest. Daten werden in SQLite 
+unter /data/votes.db gespeichert; /data ist das Docker-Volume voting_data. Updates laufen so: auf dem 
+Server git pull in /srv/apps/Brechtwahl; Frontend-Änderungen sind sofort live (ggf. docker restart voting-frontend), 
+Backend-Änderungen erfordern docker build -t voting-backend:latest ./backend und docker restart voting-backend. 
+Zugriff im LAN über http://<LAN-IP>:8080, über Tailscale über http://<TAILSCALE-IP>:8080.
