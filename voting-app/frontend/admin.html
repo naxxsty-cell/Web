@@ -94,7 +94,7 @@
     }
 
     async function loadPolls(){
-      const polls = await fetchJson('/api/polls');
+      const polls = await fetchJson('./api/polls');
       const sel = document.getElementById('pollSelect');
       sel.innerHTML = polls.map(p => `<option value="${p.id}">${p.title} (${p.id})</option>`).join('');
     }
@@ -104,12 +104,12 @@
       const pollId = document.getElementById('pollSelect').value;
       if(!pollId) return alert('Keine Abstimmung gewählt');
 
-      const r = await fetchJson(`/api/admin/results?poll_id=${encodeURIComponent(pollId)}`, { headers: headers() });
+      const r = await fetchJson(`./api/admin/results?poll_id=${encodeURIComponent(pollId)}`, { headers: headers() });
       document.getElementById('kTotal').textContent = r.total;
       document.getElementById('kYes').textContent = r.yes;
       document.getElementById('kNo').textContent = r.no;
 
-      const v = await fetchJson(`/api/admin/votes?poll_id=${encodeURIComponent(pollId)}`, { headers: headers() });
+      const v = await fetchJson(`./api/admin/votes?poll_id=${encodeURIComponent(pollId)}`, { headers: headers() });
       document.getElementById('kFirst').textContent = fmtTs(v.first_vote_at);
       document.getElementById('kLast').textContent = fmtTs(v.last_vote_at);
 
@@ -122,7 +122,7 @@
       const title = document.getElementById('newTitle').value.trim();
       if(title.length < 5) return alert('Frage zu kurz');
 
-      const created = await fetchJson('/api/admin/polls', {
+      const created = await fetchJson('./api/admin/polls', {
         method:'POST',
         headers: { ...headers(), 'Content-Type':'application/json' },
         body: JSON.stringify({ title })
@@ -140,7 +140,7 @@
       if(!pollId) return alert('Keine Abstimmung gewählt');
       if(!confirm(`Wirklich löschen?\n${pollId}\nAlle Votes werden entfernt.`)) return;
 
-      await fetchJson(`/api/admin/polls/${encodeURIComponent(pollId)}`, {
+      await fetchJson(`./api/admin/polls/${encodeURIComponent(pollId)}`, {
         method:'DELETE',
         headers: headers()
       });
