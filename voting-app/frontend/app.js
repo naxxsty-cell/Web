@@ -86,8 +86,7 @@ async function doLogin() {
     });
 
     if (!res.ok) {
-      // Falls Backend nicht läuft: trotzdem weiterlassen (Demo)
-      alert("Login-API nicht erreichbar – Demo-Modus: du kommst trotzdem weiter.");
+      // Backend antwortet, aber nicht ok -> Demo-Login zulassen
       setToken("demo-token");
       go("polls.html");
       return;
@@ -97,7 +96,7 @@ async function doLogin() {
     setToken(data.token);
     go("polls.html");
   } catch (e) {
-    alert("Backend nicht erreichbar – Demo-Modus: du kommst trotzdem weiter.");
+    // Backend nicht erreichbar -> Demo-Login zulassen
     setToken("demo-token");
     go("polls.html");
   }
