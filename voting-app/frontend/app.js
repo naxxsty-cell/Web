@@ -78,6 +78,9 @@ async function doLogin() {
     return;
   }
 
+  // >>> Eindeutiger Hinweis, damit wir sehen, dass die richtige app.js geladen wird:
+  console.log("doLogin() läuft – Demo-Fallback aktiv");
+
   try {
     const res = await fetch(api("/login"), {
       method: "POST",
@@ -85,8 +88,9 @@ async function doLogin() {
       body: JSON.stringify({ username })
     });
 
+    // GitHub Pages: wird i.d.R. 404/Failed -> dann DEMO
     if (!res.ok) {
-      // Backend antwortet, aber nicht ok -> Demo-Login zulassen
+      alert("Backend nicht erreichbar – DEMO-Login. Weiterleitung…");
       setToken("demo-token");
       go("polls.html");
       return;
@@ -96,7 +100,7 @@ async function doLogin() {
     setToken(data.token);
     go("polls.html");
   } catch (e) {
-    // Backend nicht erreichbar -> Demo-Login zulassen
+    alert("Fetch Fehler – DEMO-Login. Weiterleitung…");
     setToken("demo-token");
     go("polls.html");
   }
